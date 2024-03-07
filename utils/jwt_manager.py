@@ -1,48 +1,46 @@
 import os
-from fastapi import status, HTTPException
-from jwt import encode, decode
-from dotenv import load_dotenv
+from typing import Optional
+from fastapi import HTTPException
+from jose import  JWTError, jwt
 
-# Cargar las variables de entorno desde el archivo .env
-load_dotenv()
+def create_token(data: dict) -> Optional[str]:
+    """
+    Crea un token JWT utilizando la clave secreta proporcionada en las variables de entorno.
 
-def create_token(data: dict):
+    Args:
+        data (dict): Datos que se incluirán en el token.
+
+    Returns:
+        Optional[str]: Token JWT generado o None si hay un error.
+    """
     try:
-        # Obtener la clave secreta desde las variables de entorno
         secret_key = os.getenv("SECRET_KEY")
         if secret_key is None:
             raise ValueError("SECRET_KEY not found in environment variables.")
 
-        # Convertir la clave a bytes
-        secret_key_bytes = secret_key
-
-
-        # Generar el token
-        token: str = encode(payload=data, key=secret_key_bytes, algorithm="HS256")
+        token: str = jwt.encode(data, key=secret_key, algorithm="HS256")
         return token
 
-    except Exception as e:
-        # Manejar cualquier excepción y mostrar un mensaje de error
-        print(f"Error creating token: {e}")
-        return None
+    except JWTError as e:
+        raise HTTPException(status_code=500, detail=f"Error creating token: {e}")
 
+def validate_token(token: str) -> Optional[dict]:
+    """
+    Valida un token JWT utilizando la clave secreta proporcionada en las variables de entorno.
 
-def validate_token(token: str):
+    Args:
+        token (str): Token JWT a validar.
 
+    Returns:
+        Optional[dict]: Datos extraídos del token o None si la validación falla.
+    """
     try:
         secret_key = os.getenv("SECRET_KEY")
         if secret_key is None:
             raise ValueError("SECRET_KEY not found in environment variables.")
 
-        # Convertir la clave a bytes
-        secret_key_bytes = secret_key
-        data: dict = decode(token, key=secret_key_bytes, algorithms=["HS256"])
+        data: dict = jwt.decode(token, key=secret_key, algorithms=["HS256"])
         return data
-    
-    except Exception as e:
-      # En lugar de lanzar una HTTPException aquí, simplemente devuelve None para indicar que la validación ha fallado
-        print(f"Error validating token: {e}")
-        return None
-        
 
-
+    except JWTError as e:
+        raise HTTPException(status_code=401, detail=f"Error validating token: {e}")
