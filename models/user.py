@@ -4,13 +4,26 @@ from sqlalchemy import event
 from utils.generate_id import generate_id
 import bcrypt
 
-class User(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True, index=True)
+from models.enums.role_enum import RoleEnum
+class UserBase(SQLModel):
     name: str
-    email: str
-    token: str = Field(default=generate_id())
+    email: str = Field(unique=True, index=True)
+    
+    def check_password(user, password_from_form: str) -> bool:
+        hashed_password = bcrypt.hashpw(password_from_form.encode('utf-8'), user.salt.encode('utf-8')).decode('utf-8')
+        return hashed_password == user.password
+
+# Database model, database table inferred from class name
+class User(UserBase, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True, index=True)
     password: str
-    salt: str
+    token: str = Field(default=generate_id())
+    salt: Optional[str] = Field(default=None)
+    role: Optional[int] = Field(default=RoleEnum.OPERATOR.value)
+    
+# Properties to receive via API on creation
+class UserCreate(UserBase):
+    password: str
 
     class Config:
         json_schema_extra = {
@@ -21,14 +34,22 @@ class User(SQLModel, table=True):
             }
         }
 
-    def check_password(user, password_from_form: str) -> bool:
-        hashed_password = bcrypt.hashpw(password_from_form.encode('utf-8'), user.salt.encode('utf-8')).decode('utf-8')
-        return hashed_password == user.password
+class UserCreateOpen(SQLModel):
+    email: str
+    password: str
+    full_name: str
+
+# Properties to return via API, id is always required
+class UserOut(UserBase):
+    id: int
 
 # Properties to receive via API on Login
 class UserLogin(SQLModel,table=False):
+    id: int
     email: str
-    password: str
+    name: str
+    token: str
+    role: int = RoleEnum
     class Config:
         json_schema_extra = {
             "example": {
@@ -36,6 +57,23 @@ class UserLogin(SQLModel,table=False):
                 "password": "secret_Password"
             }
         }
+
+class UserUpdate(UserBase):
+    email: Optional[str] 
+    password: Optional[str]
+    role: Optional[str] 
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "test@email.com",
+                "password": "secret_Password_updated",
+                "role": RoleEnum.ADMIN
+            }
+        }
+
+class UserUpdateMe(SQLModel):
+    full_name: Optional[str]
+    email: Optional[str]
 
 
 def hash_password_listener(mapper, connection, target):
@@ -47,6 +85,3 @@ def hash_password_listener(mapper, connection, target):
 
 # Escucha el evento before_insert en la clase User
 event.listen(User, 'before_insert', hash_password_listener)
-
-
-

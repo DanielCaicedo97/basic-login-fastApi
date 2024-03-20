@@ -13,13 +13,12 @@ class BaseServiceImpl(BaseServiceApi[T, ID]):
         pass
 
     def save(self, entity: T) -> T:
-        try:
-            with get_session() as db:
-                db.add(entity)
-                db.commit()
-                return entity
-        except Exception as e:
-            return {"error": e}
+
+        with get_session() as db:
+            db.add(entity)
+            db.commit()
+            return entity
+  
 
     def delete(self, id: ID) -> bool:
         try:

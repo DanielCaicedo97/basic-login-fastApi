@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from middlewares.error_handler import ErrorHandler
 from config.db_config import create_db_and_tables
 from routes.user import user_router
+from routes.login import login_router
 
 app = FastAPI(
     title="Login API - Generic",
@@ -18,4 +19,5 @@ def Home():
     return "Here is Home to API"
 
 # Incluir las rutas del router del usuario bajo /api/v1
-app.include_router(user_router, prefix="/api/v1/user", tags=["Users"])
+app.include_router(login_router, prefix="/api/v1/login", tags=["Login"])
+app.include_router(user_router, prefix="/api/v1/users", tags=["Users"])
