@@ -1,0 +1,9 @@
+version: "1.0"
+services:
+  my_login_app:
+    build: .
+    ports:
+      - "4000:3000"
+    env_file:
+      - .env
+  
