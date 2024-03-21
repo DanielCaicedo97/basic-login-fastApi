@@ -1,7 +1,11 @@
 version: "3.8"
 services:
   my_login_app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/usr/src/app
     ports:
       - "4000:3000"
     env_file:
