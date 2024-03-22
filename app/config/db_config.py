@@ -1,6 +1,5 @@
 import os
-from models.user import User
-from sqlmodel import Session, SQLModel,create_engine
+from sqlmodel import Session, SQLModel, create_engine
 
 sqlite_file_name = "..\database.sqlite"
 base_dir = os.path.dirname(os.path.realpath(__file__))

@@ -4,3 +4,5 @@ __pycache__
 venv/
 *.sqlite
 .env
+docker-compose-dev.yml
+Dockerfile.dev
